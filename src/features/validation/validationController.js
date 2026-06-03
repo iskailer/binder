@@ -1,6 +1,6 @@
 import * as validationRepository from "../../data/validationRepository.js";
 import * as codeService from "../../services/codeService.js";
-import { showToast, showToastAndRedirect, showEpicToast } from "../../services/notificationService.js";
+import { showToast, showToastAndRedirect, showEpicToast, showCodeToast } from "../../services/notificationService.js";
 import { ROUTES, STORAGE_KEYS } from "../../utils/constants.js";
 import { getStorageValue, removeStorageValue } from "../../utils/storage.js";
 import { validationView } from "./validationView.js";
@@ -56,7 +56,7 @@ export function bind(context) {
           requestId,
           validatorPlayerId: select?.value
         });
-        showToast(`Codigo ${code.code} ativo por 15 segundos.`, "success");
+        showCodeToast(code.code, "Ativo por 60 segundos. Passe para o jogador.");
         context.refresh();
       } catch (error) {
         showToast(error.message, "error");

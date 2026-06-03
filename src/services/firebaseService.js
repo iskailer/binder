@@ -100,13 +100,10 @@ export function getCurrentUser() {
 
 export async function syncPlayerToFirestore(player) {
   if (!isFirebaseReady()) return;
-  const user = getCurrentUser();
-  if (!user) return;
 
   try {
-    await firestoreDb.collection("players").doc(user.uid).set({
+    await firestoreDb.collection("players").doc(player.id).set({
       ...player,
-      firebaseUid: user.uid,
       updatedAt: new Date().toISOString()
     }, { merge: true });
   } catch (error) {
@@ -208,6 +205,40 @@ export async function listCategoriesFromFirestore() {
     return snapshot.docs.map((doc) => doc.data());
   } catch (error) {
     console.warn("Leitura categorias Firestore falhou:", error.message);
+    return [];
+  }
+}
+
+export async function listPlayersFromFirestore(eventId) {
+  if (!isFirebaseReady()) return [];
+  try {
+    const snapshot = await firestoreDb
+      .collection("players")
+      .where("eventIds", "array-contains", eventId)
+      .get();
+    return snapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    // Fallback: get all players (eventIds field might not exist yet)
+    try {
+      const snapshot = await firestoreDb.collection("players").get();
+      return snapshot.docs.map((doc) => doc.data());
+    } catch (e) {
+      console.warn("Leitura players Firestore falhou:", e.message);
+      return [];
+    }
+  }
+}
+
+export async function listScoresFromFirestore(eventId) {
+  if (!isFirebaseReady()) return [];
+  try {
+    const snapshot = await firestoreDb
+      .collection("scores")
+      .where("eventId", "==", eventId)
+      .get();
+    return snapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    console.warn("Leitura scores Firestore falhou:", error.message);
     return [];
   }
 }

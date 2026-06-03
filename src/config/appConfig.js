@@ -7,7 +7,7 @@ export const APP_CONFIG = Object.freeze({
   dbName: "roleta_brusca_v1",
   eventMaxDurationHours: 48,
   eventCalendarWindowDays: 2,
-  codeTtlSeconds: 15,
+  codeTtlSeconds: 60,
   proximityMeters: 50,
   sidekickRate: 0.22,
   sidekickMinPoints: 3,

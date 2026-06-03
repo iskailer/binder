@@ -81,7 +81,7 @@ export function playView({ categories = [], event, showInput = null, activeCodes
           <button class="icon-btn" value="cancel" aria-label="Fechar" type="submit">x</button>
         </header>
         <div class="modal__body">
-          <p>Ao gerar, seu amigo tera <strong>15 segundos</strong> para usar o codigo. Ambos pontuam.</p>
+          <p>Ao gerar, seu amigo tera <strong>60 segundos</strong> para usar o codigo. Ambos pontuam.</p>
           <input type="hidden" name="categoryId" id="pontuar-category-id" />
         </div>
         <footer class="modal__footer">

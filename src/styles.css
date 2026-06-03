@@ -1272,3 +1272,54 @@ textarea {
     animation: slideIn 0.001ms ease both;
   }
 }
+
+
+/* ─── Code Toast (copyable, long-lived) ─── */
+
+.toast--code {
+  background: var(--surface);
+  color: #f7f7f2;
+  border: 1px solid rgba(255, 203, 5, 0.5);
+  padding: 1rem;
+}
+
+.toast-code__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.toast-code__value {
+  font-size: 1.8rem;
+  font-weight: 950;
+  color: var(--yellow);
+  letter-spacing: 0.08em;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.toast-code__copy {
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--yellow);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--yellow);
+  font-weight: 850;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.toast-code__copy:hover {
+  background: rgba(255, 203, 5, 0.15);
+}
+
+.toast-code__msg {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}

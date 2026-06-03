@@ -6,6 +6,7 @@ import { calculateEndOfNightTitles } from "../domain/endOfNightTitles.js";
 import { addParticipant, closeEvent, createDefaultEvent, isEventExpired } from "../domain/eventRules.js";
 import { EVENT_STATUS } from "../utils/constants.js";
 import { nowIso } from "../utils/time.js";
+import { isFirebaseReady, getFirestore, syncPlayerToFirestore, syncEventToFirestore, listPlayersFromFirestore, listScoresFromFirestore } from "./firebaseService.js";
 
 export async function startEvent(playerId) {
   await closeExpiredEvents();
@@ -15,13 +16,50 @@ export async function startEvent(playerId) {
   }
 
   const event = createDefaultEvent(playerId);
-  return eventRepository.createEvent(event);
+  const created = await eventRepository.createEvent(event);
+
+  // Sync new event and player to Firestore
+  const player = await playerRepository.getPlayerById(playerId);
+  if (player && isFirebaseReady()) {
+    syncPlayerToFirestore({ ...player, eventIds: [created.id] });
+    syncEventToFirestore(created);
+  }
+
+  return created;
 }
 
 export async function getActiveEvent() {
   await closeExpiredEvents();
   const events = await eventRepository.listOpenEvents();
-  return events[0] || null;
+  if (events[0]) return events[0];
+
+  // If no local event, check Firestore for a shared event
+  if (isFirebaseReady()) {
+    try {
+      const db = getFirestore();
+      if (!db) return null;
+      const snapshot = await db.collection("events")
+        .where("status", "==", "open")
+        .limit(5)
+        .get();
+
+      if (!snapshot.empty) {
+        // Find the most recent open event
+        const docs = snapshot.docs.map((d) => d.data());
+        const sorted = docs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const remoteEvent = sorted[0];
+        // Save to local PouchDB
+        await eventRepository.createEvent(remoteEvent).catch(() =>
+          eventRepository.updateEvent(remoteEvent).catch(() => {})
+        );
+        return remoteEvent;
+      }
+    } catch (error) {
+      console.warn("Busca evento remoto falhou:", error.message);
+    }
+  }
+
+  return null;
 }
 
 export async function getEventById(eventId) {
@@ -51,7 +89,16 @@ export async function updateEventDetails(eventId, changes) {
 export async function joinEvent(eventId, playerId) {
   const event = await eventRepository.getEventById(eventId);
   if (!event) throw new Error("Evento nao encontrado.");
-  return eventRepository.updateEvent(addParticipant(event, playerId));
+  const updatedEvent = await eventRepository.updateEvent(addParticipant(event, playerId));
+
+  // Sync player and event to Firestore for cross-device visibility
+  const player = await playerRepository.getPlayerById(playerId);
+  if (player && isFirebaseReady()) {
+    syncPlayerToFirestore({ ...player, eventIds: [eventId] });
+    syncEventToFirestore(updatedEvent);
+  }
+
+  return updatedEvent;
 }
 
 export async function endEvent(eventId, closeReason = "manual") {
@@ -86,20 +133,76 @@ export async function closeExpiredEvents() {
 }
 
 export async function getEventRanking(eventId) {
-  const [event, players, scores] = await Promise.all([
+  const [event, localPlayers, localScores] = await Promise.all([
     eventRepository.getEventById(eventId),
     playerRepository.listPlayers(),
     scoreRepository.listScoreEntriesByEvent(eventId)
   ]);
+
+  // Merge remote data for cross-device visibility
+  let players = localPlayers;
+  let scores = localScores;
+
+  if (isFirebaseReady()) {
+    try {
+      const [remotePlayers, remoteScores] = await Promise.all([
+        listPlayersFromFirestore(eventId),
+        listScoresFromFirestore(eventId)
+      ]);
+
+      // Merge remote players not present locally
+      const localPlayerIds = new Set(localPlayers.map((p) => p.id));
+      for (const rp of remotePlayers) {
+        if (rp.id && !localPlayerIds.has(rp.id)) {
+          players.push(rp);
+          // Save to local PouchDB for offline access
+          playerRepository.updatePlayer(rp).catch(() => {});
+        }
+      }
+
+      // Merge remote scores not present locally
+      const localScoreIds = new Set(localScores.map((s) => s.id));
+      for (const rs of remoteScores) {
+        if (rs.id && !localScoreIds.has(rs.id)) {
+          scores.push(rs);
+          // Save to local PouchDB for offline access
+          scoreRepository.addScoreEntry(rs).catch(() => {});
+        }
+      }
+    } catch (error) {
+      console.warn("Merge remote data falhou:", error.message);
+    }
+  }
+
   return buildRanking(scores, players, event?.participants || []);
 }
 
 export async function getEventParticipants(eventId) {
-  const [event, players] = await Promise.all([
+  const [event, localPlayers] = await Promise.all([
     eventRepository.getEventById(eventId),
     playerRepository.listPlayers()
   ]);
   const participantIds = new Set(event?.participants || []);
+
+  let players = localPlayers;
+
+  // Merge remote players for cross-device visibility
+  if (isFirebaseReady()) {
+    try {
+      const remotePlayers = await listPlayersFromFirestore(eventId);
+      const localPlayerIds = new Set(localPlayers.map((p) => p.id));
+      for (const rp of remotePlayers) {
+        if (rp.id && !localPlayerIds.has(rp.id)) {
+          players.push(rp);
+          participantIds.add(rp.id);
+          playerRepository.updatePlayer(rp).catch(() => {});
+        }
+      }
+    } catch (error) {
+      console.warn("Merge remote participants falhou:", error.message);
+    }
+  }
+
   return players.filter((player) => participantIds.has(player.id));
 }
 

@@ -4,7 +4,7 @@ import * as playerRepository from "../../data/playerRepository.js";
 import * as achievementRepository from "../../data/achievementRepository.js";
 import { generateSidekickCode, validateSidekickCode, getActiveSidekickCodes } from "../../services/sidekickService.js";
 import { syncScoreToFirestore } from "../../services/firebaseService.js";
-import { showToast, showToastAndRedirect, showEpicToast } from "../../services/notificationService.js";
+import { showToast, showToastAndRedirect, showEpicToast, showCodeToast } from "../../services/notificationService.js";
 import { assertEventCanReceiveScore } from "../../domain/eventRules.js";
 import { getCategoryPoints, getSidekickPoints, getXpFromScores } from "../../domain/scoreRules.js";
 import { calculateLevel, getTitlesForLevel } from "../../domain/levelRules.js";
@@ -53,7 +53,7 @@ export function bind(context) {
       const dialog = document.getElementById("pontuar-dialog");
       if (dialog && dialog.open) dialog.close();
 
-      showToast(`Codigo ${sidekickCode.code} gerado! Valido por 15s.`, "success");
+      showCodeToast(sidekickCode.code, "Valido por 60s. Passe para o parceiro.");
 
       // Delay refresh to allow toast to be visible
       setTimeout(() => context.refresh(), 400);
@@ -73,7 +73,7 @@ export function bind(context) {
       const event = context.event;
       assertEventCanReceiveScore(event);
 
-      const codeEntry = validateSidekickCode(rawCode, context.player.id);
+      const codeEntry = await validateSidekickCode(rawCode, context.player.id);
       const category = await categoryRepository.getCategoryById(codeEntry.categoryId);
       if (!category) throw new Error("Categoria nao encontrada.");
 

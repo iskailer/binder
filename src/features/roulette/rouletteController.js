@@ -1,5 +1,5 @@
 import { generateSidekickCode } from "../../services/sidekickService.js";
-import { showToast } from "../../services/notificationService.js";
+import { showToast, showCodeToast } from "../../services/notificationService.js";
 import { assertEventCanReceiveScore } from "../../domain/eventRules.js";
 import { rouletteView } from "./rouletteView.js";
 
@@ -128,10 +128,6 @@ function handleValidate(context) {
       eventId: context.event.id
     });
 
-    const bonusMsg = hasBonus
-      ? " Bonus de 10% garantido ao validar dentro do tempo!"
-      : "";
-
     // Store bonus info in sessionStorage for the validation flow
     if (hasBonus) {
       sessionStorage.setItem("roletabrusca.rouletteBonus", JSON.stringify({
@@ -141,7 +137,7 @@ function handleValidate(context) {
       }));
     }
 
-    showToast(`Codigo ${sidekickCode.code} gerado!${bonusMsg}`, "success");
+    showCodeToast(sidekickCode.code, hasBonus ? "Bonus de 10% garantido ao validar dentro do tempo!" : "Passe o codigo para seu parceiro validar.");
     resetRoulette();
     setTimeout(() => context.refresh(), 400);
   } catch (error) {
@@ -162,7 +158,7 @@ function handleScoreNormal(context) {
       eventId: context.event.id
     });
 
-    showToast(`Codigo ${sidekickCode.code} gerado! Sem bonus de tempo.`, "success");
+    showCodeToast(sidekickCode.code, "Sem bonus de tempo. Passe para o parceiro validar.");
     resetRoulette();
     setTimeout(() => context.refresh(), 400);
   } catch (error) {

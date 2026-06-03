@@ -8,6 +8,5 @@ export function shell({ content, route, player, event, isOnline }) {
       <main id="screen" class="screen" tabindex="-1">${content}</main>
       ${player ? bottomNav(route) : ""}
     </div>
-    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
   `;
 }
