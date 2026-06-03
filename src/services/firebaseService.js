@@ -108,8 +108,14 @@ export async function syncPlayerToFirestore(player) {
 
 export async function syncScoreToFirestore(scoreEntry) {
   if (!isFirebaseReady()) return;
+  const user = getCurrentUser();
+  if (!user) return;
+
   try {
-    await firestoreDb.collection("scores").doc(scoreEntry.id).set(scoreEntry);
+    await firestoreDb.collection("scores").doc(scoreEntry.id).set({
+      ...scoreEntry,
+      syncedBy: user.uid
+    });
   } catch (error) {
     console.warn("Sync score para Firestore falhou:", error.message);
   }
@@ -117,8 +123,14 @@ export async function syncScoreToFirestore(scoreEntry) {
 
 export async function syncEventToFirestore(event) {
   if (!isFirebaseReady()) return;
+  const user = getCurrentUser();
+  if (!user) return;
+
   try {
-    await firestoreDb.collection("events").doc(event.id).set(event, { merge: true });
+    await firestoreDb.collection("events").doc(event.id).set({
+      ...event,
+      createdBy: event.createdBy || user.uid
+    }, { merge: true });
   } catch (error) {
     console.warn("Sync event para Firestore falhou:", error.message);
   }
@@ -155,6 +167,10 @@ export async function listGeoEventsFromFirestore() {
 
 export async function createGeoEventInFirestore(eventData) {
   if (!isFirebaseReady()) throw new Error("Firebase nao disponivel para criar evento geo.");
-  const docRef = await firestoreDb.collection("events").add(eventData);
-  return { ...eventData, id: docRef.id };
+  const user = getCurrentUser();
+  if (!user) throw new Error("Faca login antes de criar evento geo.");
+
+  const data = { ...eventData, createdBy: user.uid };
+  const docRef = await firestoreDb.collection("events").add(data);
+  return { ...data, id: docRef.id };
 }

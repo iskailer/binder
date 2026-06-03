@@ -59,7 +59,7 @@ export function playView({ categories = [], event, showInput = null, activeCodes
                 ${button({
                   label: "Pontuar",
                   variant: "secondary",
-                  data: { pontuarCategory: category.id }
+                  data: { "pontuar-category": category.id }
                 })}
               </footer>
             </article>
