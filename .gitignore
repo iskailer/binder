@@ -1,0 +1,13 @@
+# Firebase config com keys reais (nunca commitar)
+firebase-config.js
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (caso use ferramentas locais)
+node_modules/

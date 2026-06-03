@@ -1,0 +1,32 @@
+{
+  "name": "Roleta Brusca: RPG do Role",
+  "short_name": "Roleta Brusca",
+  "description": "Jogo social gamificado offline-first para eventos, roles e noites entre amigos.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#111315",
+  "background_color": "#111315",
+  "categories": ["games", "social", "entertainment"],
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

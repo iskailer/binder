@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="RoleQuest icon">
+  <rect width="512" height="512" rx="96" fill="#111315"/>
+  <path d="M92 132h328v248H92z" fill="#fffaf0"/>
+  <path d="M116 156h280v200H116z" fill="#ffcb05"/>
+  <path d="M164 202h184v44H164z" fill="#111315"/>
+  <path d="M164 270h94v42h-94zM284 270h64v42h-64z" fill="#111315"/>
+  <path d="M114 110l42 46M398 110l-42 46M136 402l38-48M376 402l-38-48" stroke="#24d17e" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="256" cy="90" r="38" fill="#ff4d8d"/>
+  <path d="M222 86h68v28h-68z" fill="#111315"/>
+</svg>
