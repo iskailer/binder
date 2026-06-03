@@ -10,7 +10,8 @@ globalThis.__FIREBASE_CONFIG__ = {
   projectId: "SEU_PROJECT_ID",
   storageBucket: "SEU_PROJETO.appspot.com",
   messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
+  appId: "SEU_APP_ID",
+  measurementId: "FIREBASE_MEASUREMENT_ID"
 };
 
 // Lista de emails que tem acesso ao painel Admin
