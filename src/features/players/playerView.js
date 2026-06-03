@@ -1,30 +1,37 @@
-import { button } from "../../ui/components/button.js";
 import { badge } from "../../ui/components/badge.js";
+import { emptyState } from "../../ui/components/emptyState.js";
 import { getAvatar } from "../../services/avatarService.js";
 import { escapeHtml } from "../../utils/formatters.js";
 
-export function playerView({ players = [], activePlayer, event }) {
+export function playerView({ participants = [], activePlayer, event }) {
+  if (!event) {
+    return emptyState({
+      title: "Sem evento ativo",
+      message: "Entre em um evento para ver quem esta participando.",
+      action: `<a class="btn btn--primary btn--large" href="#/home">Voltar para base</a>`
+    });
+  }
+
+  if (!participants.length) {
+    return emptyState({
+      title: "Ninguem por aqui ainda",
+      message: "Voce e o primeiro! Compartilhe o evento para mais gente entrar.",
+      action: `<a class="btn btn--primary btn--large" href="#/home">Voltar para base</a>`
+    });
+  }
+
   return `
     <section class="screen-heading">
-      <p class="eyebrow">party management</p>
+      <p class="eyebrow">participantes do evento</p>
       <h1>Galera do role</h1>
+      <p class="muted">Apenas jogadores que entraram no evento aparecem aqui. Cada pessoa se cadastra com seu proprio aparelho.</p>
     </section>
 
-    <form id="add-player-form" class="form-card">
-      <h2>Novo participante local</h2>
-      <label>
-        <span>Apelido</span>
-        <input name="name" maxlength="32" placeholder="Ex: Paladino do Karaokê" required />
-      </label>
-      ${button({ label: "Adicionar jogador", type: "submit", variant: "primary" })}
-    </form>
-
     <section class="player-list">
-      ${players
+      ${participants
         .map((player) => {
           const avatar = getAvatar(player.avatarType);
           const isActive = player.id === activePlayer?.id;
-          const isParticipant = event?.participants?.includes(player.id);
           return `
             <article class="player-row player-row--article ${isActive ? "is-active" : ""}">
               <img src="${escapeHtml(avatar.image)}" alt="" />
@@ -32,17 +39,9 @@ export function playerView({ players = [], activePlayer, event }) {
                 <strong>${escapeHtml(player.name)}</strong>
                 <small>Nivel ${escapeHtml(player.level)} · ${escapeHtml(player.xp)} XP</small>
                 <span class="badge-line">
-                  ${isActive ? badge("ativo", "success") : ""}
-                  ${isParticipant ? badge("no evento", "score") : badge("fora do evento", "neutral")}
+                  ${isActive ? badge("voce", "success") : ""}
+                  ${badge("no evento", "score")}
                 </span>
-              </div>
-              <div class="row-actions">
-                ${button({ label: "Ativar", variant: "ghost", data: { activePlayer: player.id }, disabled: isActive })}
-                ${
-                  event && !isParticipant
-                    ? button({ label: "Entrar", variant: "secondary", data: { joinPlayer: player.id } })
-                    : ""
-                }
               </div>
             </article>
           `;

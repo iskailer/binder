@@ -1,5 +1,5 @@
 import { DOC_TYPES } from "../utils/constants.js";
-import { listEntities, getEntity, saveEntity } from "./db.js";
+import { listEntities, getEntity, saveEntity, removeEntity } from "./db.js";
 
 export const FIXED_CATEGORIES = Object.freeze([
   {
@@ -107,4 +107,32 @@ export async function listActiveCategories() {
 
 export async function getCategoryById(categoryId) {
   return getEntity(DOC_TYPES.CATEGORY, categoryId);
+}
+
+export async function createCategory({ id, name, description, points }) {
+  const category = {
+    id,
+    name,
+    description: description || "",
+    points: Number(points) || 10,
+    validationMode: "peer_geo_code",
+    fixed: false,
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+  return saveEntity(DOC_TYPES.CATEGORY, category);
+}
+
+export async function updateCategory(category) {
+  return saveEntity(DOC_TYPES.CATEGORY, category);
+}
+
+export async function deleteCategory(categoryId) {
+  return removeEntity(DOC_TYPES.CATEGORY, categoryId);
+}
+
+export async function toggleCategoryActive(categoryId) {
+  const category = await getCategoryById(categoryId);
+  if (!category) return null;
+  return saveEntity(DOC_TYPES.CATEGORY, { ...category, active: !category.active });
 }

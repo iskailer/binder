@@ -39,6 +39,7 @@ export const ROUTES = Object.freeze({
   EVENT: "#/event",
   CATEGORIES: "#/categories",
   PLAY: "#/jogar",
+  ROULETTE: "#/roleta",
   VALIDATION: "#/validation",
   RANKING: "#/ranking",
   PROFILE: "#/profile",

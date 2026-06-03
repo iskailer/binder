@@ -1,8 +1,8 @@
 import { seedFixedCategories, listActiveCategories } from "./data/categoryRepository.js";
 import { getEventById } from "./data/eventRepository.js";
-import { listPlayers, getPlayerById } from "./data/playerRepository.js";
+import { listPlayers, getPlayerById, getPlayerByFirebaseUid } from "./data/playerRepository.js";
 import * as eventService from "./services/eventService.js";
-import { initFirebase } from "./services/firebaseService.js";
+import { initFirebase, getCurrentUser, signInAnonymously } from "./services/firebaseService.js";
 import { observeNetworkStatus, registerPwa } from "./services/pwaService.js";
 import { showToast } from "./services/notificationService.js";
 import { shell } from "./ui/layout/shell.js";
@@ -22,6 +22,7 @@ import * as rankingController from "./features/ranking/rankingController.js";
 import * as profileController from "./features/profile/profileController.js";
 import * as achievementsController from "./features/achievements/achievementsController.js";
 import * as adminController from "./features/admin/adminController.js";
+import * as rouletteController from "./features/roulette/rouletteController.js";
 
 const routeMap = {
   [ROUTES.AUTH]: authController,
@@ -30,6 +31,7 @@ const routeMap = {
   [ROUTES.EVENT]: eventController,
   [ROUTES.CATEGORIES]: categoryController,
   [ROUTES.PLAY]: playController,
+  [ROUTES.ROULETTE]: rouletteController,
   [ROUTES.VALIDATION]: validationController,
   [ROUTES.RANKING]: rankingController,
   [ROUTES.PROFILE]: profileController,
@@ -47,8 +49,10 @@ init();
 async function init() {
   appElement.innerHTML = loadingState();
   await registerPwa();
-
   await initFirebase();
+
+  // Try to restore session from Firebase auth
+  await restoreSession();
 
   observeNetworkStatus(({ isOnline: nextIsOnline }) => {
     isOnline = nextIsOnline;
@@ -67,6 +71,36 @@ async function init() {
     location.hash = ROUTES.HOME;
   } else {
     render();
+  }
+}
+
+async function restoreSession() {
+  try {
+    const user = getCurrentUser();
+    if (user) {
+      // Firebase has an active session — try to find the linked player
+      const player = await getPlayerByFirebaseUid(user.uid);
+      if (player) {
+        setStorageValue(STORAGE_KEYS.ACTIVE_PLAYER_ID, player.id);
+        return;
+      }
+    }
+
+    // No active Firebase user — try signing in anonymously to maintain session
+    const storedPlayerId = getStorageValue(STORAGE_KEYS.ACTIVE_PLAYER_ID);
+    if (storedPlayerId) {
+      const player = await getPlayerById(storedPlayerId);
+      if (player && !player.firebaseUid) {
+        // Player exists but has no Firebase link — sign in and link
+        const newUser = await signInAnonymously();
+        if (newUser) {
+          const { updatePlayer } = await import("./data/playerRepository.js");
+          await updatePlayer({ ...player, firebaseUid: newUser.uid });
+        }
+      }
+    }
+  } catch (error) {
+    console.warn("Restauracao de sessao falhou:", error.message);
   }
 }
 
@@ -121,6 +155,17 @@ async function buildContext() {
 async function resolveActivePlayer(players) {
   if (!players.length) return null;
 
+  // First priority: check if Firebase has an active user with a linked player
+  const user = getCurrentUser();
+  if (user) {
+    const linkedPlayer = players.find((p) => p.firebaseUid === user.uid);
+    if (linkedPlayer) {
+      setStorageValue(STORAGE_KEYS.ACTIVE_PLAYER_ID, linkedPlayer.id);
+      return linkedPlayer;
+    }
+  }
+
+  // Second priority: localStorage stored ID
   const activePlayerId = getStorageValue(STORAGE_KEYS.ACTIVE_PLAYER_ID);
   const activePlayer = activePlayerId ? await getPlayerById(activePlayerId) : null;
   const resolved = activePlayer || players[0];

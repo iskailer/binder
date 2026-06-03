@@ -3,12 +3,13 @@ import { createId } from "../utils/ids.js";
 import { nowIso } from "../utils/time.js";
 import { listEntities, getEntity, saveEntity } from "./db.js";
 
-export async function createPlayer({ name, avatarType }) {
+export async function createPlayer({ name, avatarType, firebaseUid = null }) {
   const createdAt = nowIso();
   const player = {
     id: createId("player"),
     name,
     avatarType,
+    firebaseUid,
     xp: 0,
     level: 1,
     titles: ["Calouro do Caos"],
@@ -26,6 +27,12 @@ export async function listPlayers() {
 
 export async function getPlayerById(playerId) {
   return getEntity(DOC_TYPES.PLAYER, playerId);
+}
+
+export async function getPlayerByFirebaseUid(firebaseUid) {
+  if (!firebaseUid) return null;
+  const players = await listPlayers();
+  return players.find((p) => p.firebaseUid === firebaseUid) || null;
 }
 
 export async function updatePlayer(player) {

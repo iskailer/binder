@@ -38,6 +38,7 @@ export function homeView({ player, event, ranking = [], isOnline }) {
             <span>Buscando eventos geograficos em ate 50m...</span>
           </div>
         </div>
+        <div id="nearby-event-found" style="display:none;margin-top:0.75rem"></div>
         <div id="create-event-area" style="display:none;margin-top:1rem">
           <p class="muted">Nenhum evento encontrado por perto. Crie o seu!</p>
           ${button({ label: "Iniciar Evento", variant: "primary", size: "large", id: "start-event-btn" })}
@@ -67,6 +68,7 @@ export function homeView({ player, event, ranking = [], isOnline }) {
 
           <section class="quick-actions">
             ${button({ label: "Jogar", variant: "primary", data: { route: ROUTES.PLAY } })}
+            ${button({ label: "🎲 Roleta", variant: "primary", data: { route: ROUTES.ROULETTE } })}
             ${button({ label: "Categorias", variant: "secondary", data: { route: ROUTES.CATEGORIES } })}
             ${button({ label: "Ranking", variant: "secondary", data: { route: ROUTES.RANKING } })}
             ${button({ label: "Galera", variant: "secondary", data: { route: ROUTES.PLAYERS } })}

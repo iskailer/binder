@@ -2,6 +2,7 @@ import * as eventRepository from "../data/eventRepository.js";
 import * as playerRepository from "../data/playerRepository.js";
 import * as scoreRepository from "../data/scoreRepository.js";
 import { buildRanking } from "../domain/rankingRules.js";
+import { calculateEndOfNightTitles } from "../domain/endOfNightTitles.js";
 import { addParticipant, closeEvent, createDefaultEvent, isEventExpired } from "../domain/eventRules.js";
 import { EVENT_STATUS } from "../utils/constants.js";
 import { nowIso } from "../utils/time.js";
@@ -56,8 +57,13 @@ export async function joinEvent(eventId, playerId) {
 export async function endEvent(eventId, closeReason = "manual") {
   const event = await eventRepository.getEventById(eventId);
   if (!event) throw new Error("Evento nao encontrado.");
-  const rankingSnapshot = await getEventRanking(event.id);
-  return eventRepository.updateEvent(closeEvent(event, rankingSnapshot, nowIso(), closeReason));
+  const [rankingSnapshot, endOfNightTitles] = await Promise.all([
+    getEventRanking(event.id),
+    getEventEndOfNightTitles(event.id, event.participants || [])
+  ]);
+  const closedEvent = closeEvent(event, rankingSnapshot, nowIso(), closeReason);
+  closedEvent.endOfNightTitles = endOfNightTitles;
+  return eventRepository.updateEvent(closedEvent);
 }
 
 export async function closeExpiredEvents() {
@@ -66,8 +72,13 @@ export async function closeExpiredEvents() {
 
   for (const event of events) {
     if (isEventExpired(event)) {
-      const rankingSnapshot = await getEventRanking(event.id);
-      updated.push(await eventRepository.updateEvent(closeEvent(event, rankingSnapshot, nowIso(), "auto-expired")));
+      const [rankingSnapshot, endOfNightTitles] = await Promise.all([
+        getEventRanking(event.id),
+        getEventEndOfNightTitles(event.id, event.participants || [])
+      ]);
+      const closedEvent = closeEvent(event, rankingSnapshot, nowIso(), "auto-expired");
+      closedEvent.endOfNightTitles = endOfNightTitles;
+      updated.push(await eventRepository.updateEvent(closedEvent));
     }
   }
 
@@ -90,4 +101,12 @@ export async function getEventParticipants(eventId) {
   ]);
   const participantIds = new Set(event?.participants || []);
   return players.filter((player) => participantIds.has(player.id));
+}
+
+export async function getEventEndOfNightTitles(eventId, participantIds = []) {
+  const [players, scores] = await Promise.all([
+    playerRepository.listPlayers(),
+    scoreRepository.listScoreEntriesByEvent(eventId)
+  ]);
+  return calculateEndOfNightTitles(scores, players, participantIds);
 }

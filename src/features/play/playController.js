@@ -4,7 +4,7 @@ import * as playerRepository from "../../data/playerRepository.js";
 import * as achievementRepository from "../../data/achievementRepository.js";
 import { generateSidekickCode, validateSidekickCode, getActiveSidekickCodes } from "../../services/sidekickService.js";
 import { syncScoreToFirestore } from "../../services/firebaseService.js";
-import { showToast, showToastAndRedirect } from "../../services/notificationService.js";
+import { showToast, showToastAndRedirect, showEpicToast } from "../../services/notificationService.js";
 import { assertEventCanReceiveScore } from "../../domain/eventRules.js";
 import { getCategoryPoints, getSidekickPoints, getXpFromScores } from "../../domain/scoreRules.js";
 import { calculateLevel, getTitlesForLevel } from "../../domain/levelRules.js";
@@ -12,6 +12,7 @@ import { getNewAchievements } from "../../domain/achievementRules.js";
 import { createId } from "../../utils/ids.js";
 import { nowIso } from "../../utils/time.js";
 import { SCORE_TYPES } from "../../utils/constants.js";
+import { getRouletteBonus, consumeRouletteBonus } from "../roulette/rouletteController.js";
 import { playView } from "./playView.js";
 
 export async function render(context) {
@@ -77,8 +78,14 @@ export function bind(context) {
       if (!category) throw new Error("Categoria nao encontrada.");
 
       const createdAt = nowIso();
-      const actionPoints = getCategoryPoints(category);
-      const sidekickPoints = getSidekickPoints(actionPoints);
+      const basePoints = getCategoryPoints(category);
+      const bonus = getRouletteBonus(codeEntry.categoryId);
+      const actionPoints = bonus
+        ? Math.ceil(basePoints * (1 + bonus.bonusRate))
+        : basePoints;
+      const sidekickPoints = getSidekickPoints(basePoints);
+
+      if (bonus) consumeRouletteBonus();
 
       const actionScore = await scoreRepository.addScoreEntry({
         id: createId("score"),
@@ -117,8 +124,13 @@ export function bind(context) {
       syncScoreToFirestore(actionScore);
       syncScoreToFirestore(sidekickScore);
 
+      // 💀 Fora Épico Mode — broadcast when someone scores "levar-fora"
+      if (codeEntry.categoryId === "levar-fora") {
+        showEpicToast("💀 ALGUEM LEVOU UM FORA!");
+      }
+
       showToastAndRedirect(
-        `+${actionPoints} XP! Sidekick tambem pontuou +${sidekickPoints} XP.`,
+        `+${actionPoints} XP${bonus ? " (com bonus roleta!)" : ""}! Sidekick tambem pontuou +${sidekickPoints} XP.`,
         "success",
         context.navigate
       );

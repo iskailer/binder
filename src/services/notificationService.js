@@ -16,6 +16,22 @@ export function showToast(message, variant = "success") {
   }, 3200);
 }
 
+export function showEpicToast(message) {
+  const region = document.getElementById("toast-region");
+  if (!region) return;
+
+  const toast = document.createElement("div");
+  toast.className = "toast toast--epic";
+  toast.setAttribute("role", "alert");
+  toast.textContent = message;
+  region.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("toast--leaving");
+    setTimeout(() => toast.remove(), 220);
+  }, 5000);
+}
+
 export function showToastAndRedirect(message, variant = "success", navigateFn = null) {
   showToast(message, variant);
   setTimeout(() => {

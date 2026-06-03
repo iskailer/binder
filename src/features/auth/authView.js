@@ -10,13 +10,25 @@ export function authView({ players = [] }) {
         <p class="eyebrow">RPG social offline-first</p>
         <h1>Roleta Brusca</h1>
         <p class="lede">Pontue causos, valide bravuras e transforme a noite em ranking local.</p>
+
+        ${button({ label: "Entrar com Google", type: "button", variant: "primary", size: "large", id: "google-login-btn" })}
+
+        <div class="auth-divider">
+          <span>ou crie um jogador local</span>
+        </div>
+
         <form id="create-player-form" class="form-stack">
           <label>
             <span>Apelido do jogador</span>
             <input name="name" autocomplete="nickname" maxlength="32" placeholder="Ex: Bruxo do Pagode" required />
           </label>
-          ${button({ label: "Criar jogador", type: "submit", variant: "primary", size: "large" })}
+          ${button({ label: "Criar jogador sem login", type: "submit", variant: "ghost", size: "large" })}
         </form>
+
+        <div class="auth-warning">
+          <strong>Atencao:</strong> Sem login com Google, seus dados ficam apenas neste aparelho. 
+          Se limpar o navegador ou trocar de celular, voce pode perder todo o progresso.
+        </div>
       </div>
 
       ${

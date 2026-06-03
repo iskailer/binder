@@ -18,6 +18,12 @@ export function playView({ categories = [], event, showInput = null, activeCodes
       <h1>Jogar</h1>
     </section>
 
+    <section class="section-block" style="margin-bottom:1rem;text-align:center">
+      <p class="eyebrow">🎲 quer mais adrenalina?</p>
+      <p>Gire a roleta de desafios e ganhe <strong>+10% bonus</strong> se completar em 10 minutos.</p>
+      <a class="btn btn--primary" href="#/roleta">Abrir Roleta</a>
+    </section>
+
     ${activeCodes.length ? `
       <section class="section-block">
         <h2>Seus codigos ativos (Sidekick)</h2>

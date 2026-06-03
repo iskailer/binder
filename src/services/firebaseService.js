@@ -68,6 +68,14 @@ export async function signInAnonymously() {
   }
 }
 
+export async function signInWithGoogle() {
+  if (!firebaseAuth) throw new Error("Firebase nao disponivel. Configure firebase-config.js.");
+  const firebase = globalThis.firebase;
+  const provider = new firebase.auth.GoogleAuthProvider();
+  const credential = await firebaseAuth.signInWithPopup(provider);
+  return credential.user;
+}
+
 export async function signInWithEmail(email, password) {
   if (!firebaseAuth) throw new Error("Firebase nao disponivel. Configure firebase-config.js.");
   const credential = await firebaseAuth.signInWithEmailAndPassword(email, password);
@@ -173,4 +181,33 @@ export async function createGeoEventInFirestore(eventData) {
   const data = { ...eventData, createdBy: user.uid };
   const docRef = await firestoreDb.collection("events").add(data);
   return { ...data, id: docRef.id };
+}
+
+export async function saveCategoryToFirestore(category) {
+  if (!isFirebaseReady()) return;
+  try {
+    await firestoreDb.collection("categories").doc(category.id).set(category, { merge: true });
+  } catch (error) {
+    console.warn("Sync categoria para Firestore falhou:", error.message);
+  }
+}
+
+export async function deleteCategoryFromFirestore(categoryId) {
+  if (!isFirebaseReady()) return;
+  try {
+    await firestoreDb.collection("categories").doc(categoryId).delete();
+  } catch (error) {
+    console.warn("Delete categoria Firestore falhou:", error.message);
+  }
+}
+
+export async function listCategoriesFromFirestore() {
+  if (!isFirebaseReady()) return [];
+  try {
+    const snapshot = await firestoreDb.collection("categories").get();
+    return snapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    console.warn("Leitura categorias Firestore falhou:", error.message);
+    return [];
+  }
 }

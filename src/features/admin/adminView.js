@@ -1,7 +1,8 @@
 import { button } from "../../ui/components/button.js";
+import { badge } from "../../ui/components/badge.js";
 import { escapeHtml, formatDateTime } from "../../utils/formatters.js";
 
-export function adminView({ authenticated = false, geoEvents = [], ranking = [], currentEventId = null }) {
+export function adminView({ authenticated = false, geoEvents = [], ranking = [], currentEventId = null, categories = [] }) {
   if (!authenticated) {
     return `
       <section class="screen-heading">
@@ -29,6 +30,54 @@ export function adminView({ authenticated = false, geoEvents = [], ranking = [],
     <section class="screen-heading">
       <p class="eyebrow">painel restrito</p>
       <h1>Admin</h1>
+    </section>
+
+    <form id="create-category-form" class="form-card">
+      <h2>Nova Categoria</h2>
+      <label>
+        <span>Nome da categoria</span>
+        <input name="categoryName" maxlength="60" placeholder="Ex: Cantar no karaoke" required />
+      </label>
+      <label>
+        <span>Descricao</span>
+        <input name="categoryDescription" maxlength="120" placeholder="Descricao curta" />
+      </label>
+      <label>
+        <span>Pontos (XP)</span>
+        <input name="categoryPoints" type="number" min="1" max="100" value="10" required />
+      </label>
+      ${button({ label: "Criar Categoria", type: "submit", variant: "primary" })}
+    </form>
+
+    <section class="section-block">
+      <h2>Categorias (${categories.length})</h2>
+      <div class="category-grid">
+        ${categories.map((cat) => `
+          <article class="category-card">
+            <div>
+              <h2>${escapeHtml(cat.name)}</h2>
+              <p>${escapeHtml(cat.description || "")}</p>
+              <span class="badge-line">
+                ${badge(`${cat.points} XP`, "score")}
+                ${cat.fixed ? badge("fixa", "neutral") : badge("custom", "success")}
+                ${cat.active ? badge("ativa", "success") : badge("inativa", "danger")}
+              </span>
+            </div>
+            <footer>
+              ${button({
+                label: cat.active ? "Desativar" : "Ativar",
+                variant: cat.active ? "ghost" : "secondary",
+                data: { "toggle-category": cat.id }
+              })}
+              ${!cat.fixed ? button({
+                label: "Excluir",
+                variant: "danger",
+                data: { "delete-category": cat.id }
+              }) : ""}
+            </footer>
+          </article>
+        `).join("")}
+      </div>
     </section>
 
     <form id="create-geo-event-form" class="form-card">

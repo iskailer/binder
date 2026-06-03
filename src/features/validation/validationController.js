@@ -1,6 +1,6 @@
 import * as validationRepository from "../../data/validationRepository.js";
 import * as codeService from "../../services/codeService.js";
-import { showToast, showToastAndRedirect } from "../../services/notificationService.js";
+import { showToast, showToastAndRedirect, showEpicToast } from "../../services/notificationService.js";
 import { ROUTES, STORAGE_KEYS } from "../../utils/constants.js";
 import { getStorageValue, removeStorageValue } from "../../utils/storage.js";
 import { validationView } from "./validationView.js";
@@ -73,6 +73,12 @@ export function bind(context) {
         rawCode: form.get("code"),
         targetPlayerId: context.player.id
       });
+
+      // 💀 Fora Épico Mode
+      if (result.category.id === "levar-fora") {
+        showEpicToast("💀 ALGUEM LEVOU UM FORA!");
+      }
+
       showToastAndRedirect(
         `+${result.actionScore.points} XP para ${result.category.name}; sidekick tambem pontuou.`,
         "success",

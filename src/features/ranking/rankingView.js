@@ -14,6 +14,7 @@ export function rankingView({ event, ranking = [] }) {
   }
 
   const isClosed = event.status === EVENT_STATUS.CLOSED;
+  const titles = event.endOfNightTitles || [];
 
   return `
     <section class="screen-heading">
@@ -21,6 +22,8 @@ export function rankingView({ event, ranking = [] }) {
       <h1>Ranking da noite</h1>
       ${isClosed && event.endedAt ? `<p>Encerrado em ${escapeHtml(formatDateTime(event.endedAt))}</p>` : ""}
     </section>
+
+    ${isClosed && titles.length ? renderEndOfNightTitles(titles) : ""}
 
     <section class="ranking-list">
       ${ranking
@@ -46,6 +49,26 @@ export function rankingView({ event, ranking = [] }) {
 
     <section class="ranking-note">
       ${badge("desempate: acoes, depois chegada", "neutral")}
+    </section>
+  `;
+}
+
+function renderEndOfNightTitles(titles) {
+  return `
+    <section class="end-of-night-titles">
+      <p class="eyebrow">🏆 titulos de fim de noite</p>
+      <div class="titles-grid">
+        ${titles.map((t) => `
+          <article class="title-card">
+            <span class="title-card__emoji">${t.emoji}</span>
+            <div class="title-card__info">
+              <strong>${escapeHtml(t.title)}</strong>
+              <span class="title-card__player">${escapeHtml(t.playerName)}</span>
+              <small>${escapeHtml(t.stat)}</small>
+            </div>
+          </article>
+        `).join("")}
+      </div>
     </section>
   `;
 }
